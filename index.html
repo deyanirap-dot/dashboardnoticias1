@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Dashboard Noticias | Terminal financiera</title>
+  <style>
+    :root {
+      --navy:#0b1f33; --navy-2:#12324b; --turq:#16b8b0; --turq-2:#0e938e;
+      --bg:#f2f6f9; --surface:#fff; --surface-2:#f7fafc; --text:#14283b;
+      --muted:#687b8d; --line:#dce5ec; --shadow:0 8px 24px rgba(15,39,59,.07);
+      --green:#16865d; --amber:#a66a08; --red:#bd3e4b; --radius:15px;
+    }
+    [data-theme="dark"] {
+      --bg:#0b1724; --surface:#122436; --surface-2:#172c40; --text:#e7f0f6;
+      --muted:#9db0bf; --line:#294054; --shadow:0 8px 24px rgba(0,0,0,.2);
+      --navy:#071522; --navy-2:#10283c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
+    .sidebar{background:var(--navy);color:#e9f4f8;padding:25px 16px;display:flex;flex-direction:column;gap:28px}
+    .brand{display:flex;align-items:center;gap:11px;padding:0 9px}
+    .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--turq),#5bd6ca);display:grid;place-items:center;color:#062b38;font-weight:900;font-size:19px}
+    .brand-name{font-size:15px;font-weight:800;letter-spacing:.02em}
+    .brand-sub{font-size:10px;color:#9db6c6;letter-spacing:.14em;text-transform:uppercase}
+    .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#7f9aab;padding:0 12px;margin-bottom:8px}
+    .nav{display:grid;gap:5px}
+    .nav button{border:0;background:transparent;color:#c3d3de;text-align:left;padding:11px 12px;border-radius:10px;display:flex;align-items:center;gap:12px;transition:.18s}
+    .nav button:hover,.nav button.active{background:#193b52;color:white}
+    .nav button.active{box-shadow:inset 3px 0 var(--turq)}
+    .nav-icon{width:20px;text-align:center;color:#69d6ce;font-size:16px}
+    .side-note{margin-top:auto;border:1px solid #29475c;border-radius:12px;padding:13px;color:#a9bfcc;font-size:11px}
+    .side-note strong{display:block;color:#e4f0f5;margin-bottom:5px;font-size:12px}
+    .main{min-width:0;padding:28px clamp(18px,3vw,42px) 40px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:25px}
+    .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--turq-2);font-weight:800}
+    h1{font-size:27px;line-height:1.2;margin:3px 0 4px;letter-spacing:-.035em}
+    .subtitle{color:var(--muted);font-size:12px}
+    .actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:9px 13px;font-weight:650;display:inline-flex;align-items:center;gap:8px}
+    .btn:hover{border-color:var(--turq);transform:translateY(-1px)}
+    .btn-primary{background:var(--turq);border-color:var(--turq);color:#062b35}
+    .btn-primary:hover{background:#32c9c0}
+    .statusline{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;margin:0 0 18px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#9aa9b5;display:inline-block}
+    .dot.ok{background:#20a875}.dot.partial{background:#e3a332}.dot.error{background:#d95762}
+    .notice{padding:12px 15px;border-radius:11px;margin:0 0 14px;border:1px solid var(--line);background:var(--surface);font-size:12px}
+    .notice.warning{border-color:#e7c98c;background:color-mix(in srgb,#e6aa36 9%,var(--surface));color:var(--text)}
+    .notice.error{border-color:#e3a1a7;background:color-mix(in srgb,#d95762 9%,var(--surface));color:var(--text)}
+    .notice.info{border-color:color-mix(in srgb,var(--turq) 45%,var(--line))}
+    .notice strong{display:block;margin-bottom:3px}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:17px}
+    .metric,.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .metric{padding:16px 17px;min-height:112px}
+    .metric-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px;font-weight:650}
+    .metric-icon{width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:color-mix(in srgb,var(--turq) 13%,transparent);color:var(--turq-2);font-size:15px}
+    .metric-value{font-size:27px;font-weight:800;letter-spacing:-.04em;margin-top:9px;line-height:1.1}
+    .metric-foot{font-size:10px;color:var(--muted);margin-top:5px}
+    .content-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.85fr);gap:15px;margin-bottom:17px}
+    .panel{padding:18px}
+    .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:15px}
+    h2{font-size:14px;margin:0;font-weight:800}
+    .panel-desc{color:var(--muted);font-size:10px;margin-top:3px}
+    .total-tag{font-size:10px;color:var(--muted);background:var(--surface-2);padding:5px 8px;border-radius:7px}
+    .distribution{display:grid;gap:13px}
+    .dist-row{display:grid;grid-template-columns:105px minmax(60px,1fr) 30px;gap:10px;align-items:center;font-size:11px}
+    .dist-label{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-track{height:9px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--turq),#58d2c8);min-width:0}
+    .dist-count{text-align:right;font-weight:750;font-variant-numeric:tabular-nums}
+    .donut-wrap{display:flex;align-items:center;justify-content:center;gap:22px;min-height:145px}
+    .donut{width:128px;height:128px;border-radius:50%;position:relative;flex:none;background:conic-gradient(var(--turq) 0deg 90deg,#347ba0 90deg 180deg,#82b7c4 180deg 270deg,#d2a85b 270deg 360deg)}
+    .donut:after{content:"";position:absolute;inset:24px;background:var(--surface);border-radius:50%}
+    .donut-center{position:absolute;inset:0;z-index:1;display:grid;place-content:center;text-align:center}
+    .donut-center strong{font-size:22px;line-height:1.1}.donut-center span{font-size:9px;color:var(--muted)}
+    .legend{display:grid;gap:8px;font-size:10px;color:var(--muted)}
+    .legend-item{display:flex;align-items:center;gap:7px}
+    .legend-swatch{width:8px;height:8px;border-radius:3px;flex:none}
+    .toolbar{display:grid;grid-template-columns:minmax(180px,1.5fr) repeat(3,minmax(130px,.8fr));gap:9px;margin-bottom:14px}
+    .field{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:var(--surface);color:var(--text);outline:none;font-size:11px}
+    .field:focus{border-color:var(--turq);box-shadow:0 0 0 3px color-mix(in srgb,var(--turq) 13%,transparent)}
+    .search-wrap{position:relative}.search-wrap .field{padding-left:34px}.search-symbol{position:absolute;left:12px;top:8px;color:var(--muted);font-size:15px}
+    .feed-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:7px 0 12px}
+    .feed-head p{margin:0;color:var(--muted);font-size:10px}
+    .articles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .article{border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:15px;display:flex;flex-direction:column;min-height:160px;transition:.18s}
+    .article:hover{border-color:color-mix(in srgb,var(--turq) 65%,var(--line));box-shadow:var(--shadow);transform:translateY(-2px)}
+    .article-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px}
+    .category-pill{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--turq-2);background:color-mix(in srgb,var(--turq) 12%,transparent);padding:4px 7px;border-radius:6px}
+    .article-date{font-size:9px;color:var(--muted);white-space:nowrap}
+    .article-title{font-size:13px;line-height:1.45;font-weight:750;margin:0 0 13px;overflow-wrap:anywhere}
+    .article-bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .article-source{font-size:10px;color:var(--muted);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .article-link{font-size:10px;color:var(--turq-2);font-weight:800;text-decoration:none;white-space:nowrap}
+    .article-link:hover{text-decoration:underline}
+    .empty{grid-column:1/-1;text-align:center;padding:36px 20px;border:1px dashed var(--line);border-radius:13px;background:var(--surface)}
+    .empty-icon{font-size:28px;margin-bottom:8px}.empty h3{font-size:14px;margin:0 0 6px}.empty p{max-width:560px;margin:0 auto;color:var(--muted);font-size:11px}
+    .footer{margin-top:24px;padding-top:13px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px}
+    .hidden{display:none!important}
+    @media(max-width:1050px){.app{grid-template-columns:210px minmax(0,1fr)}.metrics{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}.toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:680px){.app{display:block}.sidebar{padding:13px 14px;gap:12px}.brand{padding:0 4px}.sidebar .nav-label,.side-note{display:none}.nav{display:flex;overflow-x:auto;padding-bottom:2px}.nav button{white-space:nowrap;padding:8px 10px;font-size:11px}.nav-icon{display:none}.main{padding:20px 14px 30px}.topbar{align-items:flex-start;flex-direction:column}.actions{width:100%}.metrics{gap:9px}.metric{padding:13px;min-height:100px}.metric-value{font-size:23px}.articles{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search-wrap{grid-column:1/-1}.footer{flex-direction:column}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="app" id="app" data-theme="light">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div><div class="brand-name">DASHBOARD NOTICIAS</div><div class="brand-sub">Financial intelligence</div></div>
+    </div>
+    <div>
+      <div class="nav-label">Cobertura</div>
+      <nav class="nav" aria-label="Secciones">
+        <button class="active" data-category="Todas"><span class="nav-icon">▦</span>Resumen general</button>
+        <button data-category="México"><span class="nav-icon">◈</span>México</button>
+        <button data-category="Estados Unidos"><span class="nav-icon">◉</span>Estados Unidos</button>
+        <button data-category="Mercados"><span class="nav-icon">↗</span>Mercados</button>
+        <button data-category="Política"><span class="nav-icon">⚖</span>Política</button>
+      </nav>
+    </div>
+    <div class="side-note"><strong>Centro de monitoreo</strong>Información recopilada desde las fuentes configuradas en el proceso de actualización del repositorio.</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Inteligencia económica · financiera · política</div>
+        <h1>Dashboard Noticias</h1>
+        <div class="subtitle">Un panorama claro de la actualidad y sus principales temas.</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="themeBtn" type="button" aria-label="Cambiar tema">◐ <span>Modo oscuro</span></button>
+        <button class="btn btn-primary" id="refreshBtn" type="button">↻ <span>Refresh</span></button>
+        <button class="btn" id="exportBtn" type="button">↓ <span>Exportar CSV</span></button>
+      </div>
+    </header>
+
+    <div class="statusline"><span class="dot" id="statusDot"></span><span id="statusText">Conectando con noticias.json…</span><span>·</span><span id="lastUpdated">Última recopilación: sin datos</span></div>
+    <div id="notices" aria-live="polite"></div>
+
+    <section class="metrics" aria-label="Indicadores">
+      <article class="metric"><div class="metric-head"><span>Noticias disponibles</span><span class="metric-icon">▤</span></div><div class="metric-value" id="metricArticles">—</div><div class="metric-foot">Registros en el archivo</div></article>
+      <article class="metric"><div class="metric-head"><span>Fuentes activas</span><span class="metric-icon">◎</span></div><div class="metric-value" id="metricSources">—</div><div class="metric-foot" id="sourcesFoot">Fuentes con respuesta</div></article>
+      <article class="metric"><div class="metric-head"><span>Nuevas en recopilación</span><span class="metric-icon">✳</span></div><div class="metric-value" id="metricNew">—</div><div class="metric-foot">Dato reportado por el recopilador</div></article>
+      <article class="metric"><div class="metric-head"><span>Categorías cubiertas</span><span class="metric-icon">◫</span></div><div class="metric-value" id="metricCategories">—</div><div class="metric-foot">Con al menos una noticia</div></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel">
+        <div class="panel-head"><div><h2>Distribución temática</h2><div class="panel-desc">Noticias por categoría · cálculo sobre el archivo actual</div></div><span class="total-tag" id="distributionTotal">0 noticias</span></div>
+        <div class="distribution" id="distribution"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><h2>Composición de cobertura</h2><div class="panel-desc">Participación por categoría</div></div></div>
+        <div class="donut-wrap"><div class="donut" id="donut" role="img" aria-label="Gráfica de distribución por categoría"><div class="donut-center"><strong id="donutTotal">0</strong><span>NOTICIAS</span></div></div><div class="legend" id="legend"></div></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><h2>Explorar noticias</h2><div class="panel-desc">Busca titulares y filtra los registros recopilados</div></div><span class="total-tag" id="resultsCount">0 resultados</span></div>
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-symbol">⌕</span><input class="field" id="searchInput" type="search" placeholder="Buscar titular o fuente…" aria-label="Buscar noticias"></div>
+        <select class="field" id="categoryFilter" aria-label="Filtrar por categoría"><option value="">Todas las categorías</option></select>
+        <select class="field" id="sourceFilter" aria-label="Filtrar por fuente"><option value="">Todas las fuentes</option></select>
+        <input class="field" id="dateFrom" type="date" aria-label="Fecha desde">
+        <input class="field" id="dateTo" type="date" aria-label="Fecha hasta">
+      </div>
+      <div class="feed-head"><div><h2 id="feedTitle">Últimos titulares</h2><p>Abre cada nota en su sitio de origen.</p></div><button class="btn" id="clearFilters" type="button">Limpiar filtros</button></div>
+      <div class="articles" id="articles" aria-live="polite"></div>
+    </section>
+    <footer class="footer"><span>Dashboard Noticias · Panel de consulta</span><span>Los indicadores se calculan únicamente con los datos de noticias.json.</span></footer>
+  </main>
+</div>
+<script>
+(() => {
+  'use strict';
+  const DATA_URL = './noticias.json?t=' + Date.now();
+  const categories = ['México', 'Estados Unidos', 'Mercados', 'Política'];
+  const palette = ['#16b8b0', '#347ba0', '#82b7c4', '#d2a85b'];
+  const state = { data: null, articles: [], selectedCategory: 'Todas', loading: false };
+  const $ = id => document.getElementById(id);
+
+  function safeDate(value) {
+    if (!value) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  function formatDate(value) {
+    const d = safeDate(value);
+    return d ? new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' }).format(d) : 'Fecha no disponible';
+  }
+  function articleDate(a) { return safeDate(a.published_at) || safeDate(a.collected_at); }
+  function setStatus(status, text) {
+    $('statusDot').className = 'dot ' + (status || '');
+    $('statusText').textContent = text;
+  }
+  function addNotice(type, title, message) {
+    const box = document.createElement('div');
+    box.className = 'notice ' + type;
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    const body = document.createElement('div');
+    body.textContent = message;
+    box.append(strong, body);
+    $('notices').append(box);
+  }
+  function clearNotices() { $('notices').replaceChildren(); }
+
+  async function loadNews() {
+    if (state.loading) return;
+    state.loading = true;
+    $('refreshBtn').disabled = true;
+    $('refreshBtn').querySelector('span').textContent = 'Actualizando…';
+    setStatus('', 'Leyendo noticias.json…');
+    clearNotices();
+    try {
+      // Refresh vuelve a leer únicamente el archivo estático indicado en el contrato.
+      const response = await fetch('./noticias.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('El servidor respondió HTTP ' + response.status + '.');
+      const data = await response.json();
+      if (!data || typeof data !== 'object' || !Array.isArray(data.articles)) {
+        throw new Error('El archivo no tiene el formato esperado: se requiere un arreglo "articles".');
+      }
+      state.data = data;
+      state.articles = data.articles.filter(item => item && typeof item === 'object');
+      updateDashboard();
+      const status = data.status || 'pending';
+      if (status === 'partial') {
+        setStatus('partial', 'Recopilación parcial');
+        addNotice('warning', 'Fuente parcial', 'Una o más fuentes no pudieron consultarse. Los resultados visibles corresponden únicamente a los datos recopilados.');
+      } else if (status === 'error') {
+        setStatus('error', 'La recopilación reportó errores');
+        addNotice('error', 'Aviso de recopilación', 'El archivo reporta errores. Revisa el detalle de fuentes y errores indicado a continuación.');
+      } else if (status === 'pending') {
+        setStatus('partial', 'Recopilación pendiente');
+        addNotice('info', 'Recopilación pendiente', 'El archivo indica que las noticias están pendientes de actualización.');
+      } else {
+        setStatus('ok', 'Archivo cargado correctamente');
+      }
+      if (Array.isArray(data.errors) && data.errors.length) {
+        const details = data.errors.map(String).join(' · ');
+        addNotice(status === 'error' ? 'error' : 'warning', 'Detalle de fuentes', details);
+      }
+      if (state.articles.length === 0) {
+        addNotice('info', 'Aún no hay noticias recopiladas', 'Para obtener noticias nuevas, entra a GitHub → tu repositorio → Actions → “Actualizar noticias y publicar dashboard” → “Run workflow” → “Run workflow”. Después de que termine el proceso, pulsa Refresh para volver a leer noticias.json.');
+      }
+    } catch (error) {
+      state.data = null;
+      state.articles = [];
+      updateDashboard();
+      setStatus('error', 'No fue posible cargar noticias.json');
+      addNotice('error', 'Error al cargar el archivo', String(error && error.message ? error.message : error) + ' Verifica que index.html y noticias.json estén publicados en la misma ubicación y vuelve a intentar con Refresh.');
+    } finally {
+      state.loading = false;
+      $('refreshBtn').disabled = false;
+      $('refreshBtn').querySelector('span').textContent = 'Refresh';
+    }
+  }
+
+  function countByCategory(items) {
+    const counts = new Map(categories.map(c => [c, 0]));
+    items.forEach(a => {
+      const cat = normalizeCategory(a.category);
+      if (counts.has(cat)) counts.set(cat, counts.get(cat) + 1);
+      else if (a.category) counts.set(String(a.category), (counts.get(String(a.category)) || 0) + 1);
+    });
+    return counts;
+  }
+  function normalizeCategory(value) {
+    const s = String(value || '').trim().toLocaleLowerCase('es-MX');
+    return categories.find(c => c.toLocaleLowerCase('es-MX') === s) || String(value || 'Sin categoría');
+  }
+  function updateDashboard() {
+    const data = state.data || {};
+    const items = state.articles;
+    const sources = new Set(items.map(a => String(a.source || '').trim()).filter(Boolean));
+    const counts = countByCategory(items);
+    const covered = [...counts.values()].filter(n => n > 0).length;
+    $('metricArticles').textContent = items.length.toLocaleString('es-MX');
+    $('metricSources').textContent = data.sources_ok != null && data.sources_total != null
+      ? `${Number(data.sources_ok) || 0}/${Number(data.sources_total) || 0}` : String(sources.size);
+    $('sourcesFoot').textContent = data.sources_ok != null ? 'Fuentes con respuesta / total' : 'Fuentes distintas en las noticias';
+    $('metricNew').textContent = data.new_articles == null ? '—' : Number(data.new_articles).toLocaleString('es-MX');
+    $('metricCategories').textContent = String(covered);
+    $('lastUpdated').textContent = 'Última recopilación: ' + (data.generated_at ? formatDate(data.generated_at) : 'sin datos');
+    $('distributionTotal').textContent = `${items.length} noticias`;
+    $('donutTotal').textContent = items.length;
+    renderDistribution(counts, items.length);
+    populateFilters(items);
+    renderArticles();
+  }
+  function renderDistribution(counts, total) {
+    const root = $('distribution');
+    root.replaceChildren();
+    const legend = $('legend');
+    legend.replaceChildren();
+    const entries = [...counts.entries()];
+    entries.forEach(([name, count], index) => {
+      const row = document.createElement('div'); row.className = 'dist-row';
+      const label = document.createElement('span'); label.className = 'dist-label'; label.textContent = name;
+      const track = document.createElement('div'); track.className = 'bar-track';
+      const fill = document.createElement('div'); fill.className = 'bar-fill';
+      fill.style.width = (total ? count / total * 100 : 0) + '%';
+      track.append(fill);
+      const num = document.createElement('span'); num.className = 'dist-count'; num.textContent = count;
+      row.append(label, track, num); root.append(row);
+
+      const li = document.createElement('div'); li.className = 'legend-item';
+      const swatch = document.createElement('span'); swatch.className = 'legend-swatch'; swatch.style.background = palette[index % palette.length];
+      const txt = document.createElement('span'); txt.textContent = `${name} · ${total ? Math.round(count / total * 100) : 0}%`;
+      li.append(swatch, txt); legend.append(li);
+    });
+    let offset = 0;
+    const stops = entries.map(([name, count], i) => {
+      const start = offset; offset += total ? count / total * 360 : 0;
+      return `${palette[i % palette.length]} ${start}deg ${offset}deg`;
+    });
+    $('donut').style.background = total ? `conic-gradient(${stops.join(',')})` : 'conic-gradient(var(--line) 0deg 360deg)';
+  }
+  function populateFilters(items) {
+    const cat = $('categoryFilter'), src = $('sourceFilter');
+    const currentCat = cat.value, currentSrc = src.value;
+    const categoryNames = [...new Set(items.map(a => normalizeCategory(a.category)))].sort((a,b)=>a.localeCompare(b,'es'));
+    const sourceNames = [...new Set(items.map(a => String(a.source || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    cat.replaceChildren(new Option('Todas las categorías', ''));
+    categoryNames.forEach(c => cat.add(new Option(c, c)));
+    src.replaceChildren(new Option('Todas las fuentes', ''));
+    sourceNames.forEach(s => src.add(new Option(s, s)));
+    if (categoryNames.includes(currentCat)) cat.value = currentCat;
+    if (sourceNames.includes(currentSrc)) src.value = currentSrc;
+  }
+  function filteredArticles() {
+    const q = $('searchInput').value.trim().toLocaleLowerCase('es-MX');
+    const cat = $('categoryFilter').value;
+    const src = $('sourceFilter').value;
+    const from = $('dateFrom').value ? new Date($('dateFrom').value + 'T00:00:00') : null;
+    const to = $('dateTo').value ? new Date($('dateTo').value + 'T23:59:59.999') : null;
+    return state.articles.filter(a => {
+      const title = String(a.title || '').toLocaleLowerCase('es-MX');
+      const source = String(a.source || '').toLocaleLowerCase('es-MX');
+      const category = normalizeCategory(a.category);
+      const d = articleDate(a);
+      return (!q || title.includes(q) || source.includes(q)) &&
+        (!cat || category === cat) &&
+        (!src || String(a.source || '').trim() === src) &&
+        (!from || (d && d >= from)) && (!to || (d && d <= to)) &&
+        (state.selectedCategory === 'Todas' || category === state.selectedCategory);
+    }).sort((a,b) => (articleDate(b)?.getTime() || 0) - (articleDate(a)?.getTime() || 0));
+  }
+  function renderArticles() {
+    const root = $('articles'); root.replaceChildren();
+    const items = filteredArticles();
+    $('resultsCount').textContent = `${items.length} resultados`;
+    $('feedTitle').textContent = state.selectedCategory === 'Todas' ? 'Últimos titulares' : 'Noticias · ' + state.selectedCategory;
+    if (!items.length) {
+      const empty = document.createElement('div'); empty.className = 'empty';
+      const icon = document.createElement('div'); icon.className = 'empty-icon'; icon.textContent = state.articles.length ? '⌕' : '▤';
+      const title = document.createElement('h3'); title.textContent = state.articles.length ? 'No hay resultados para estos filtros' : 'Aún no hay noticias disponibles';
+      const desc = document.createElement('p');
+      desc.textContent = state.articles.length
+        ? 'Prueba con otra búsqueda, cambia la categoría o limpia los filtros para ver más resultados.'
+        : 'Este dashboard no inventa titulares ni cotizaciones. Para recopilar noticias, ve a GitHub → repositorio → Actions → “Actualizar noticias y publicar dashboard” → “Run workflow” → “Run workflow”. Cuando termine, pulsa Refresh para cargar el archivo actualizado.';
+      empty.append(icon, title, desc); root.append(empty); return;
+    }
+    items.forEach(a => {
+      const card = document.createElement('article'); card.className = 'article';
+      const meta = document.createElement('div'); meta.className = 'article-meta';
+      const pill = document.createElement('span'); pill.className = 'category-pill'; pill.textContent = normalizeCategory(a.category);
+      const date = document.createElement('time'); date.className = 'article-date';
+      date.textContent = formatDate(a.published_at || a.collected_at);
+      if (a.published_at) date.dateTime = String(a.published_at);
+      meta.append(pill, date);
+      const title = document.createElement('h3'); title.className = 'article-title'; title.textContent = String(a.title || 'Titular sin título');
+      const bottom = document.createElement('div'); bottom.className = 'article-bottom';
+      const source = document.createElement('span'); source.className = 'article-source'; source.textContent = String(a.source || 'Fuente no especificada');
+      bottom.append(source);
+      const url = validHttpUrl(a.url);
+      if (url) {
+        const link = document.createElement('a'); link.className = 'article-link'; link.href = url;
+        link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Leer noticia ↗';
+        bottom.append(link);
+      }
+      card.append(meta, title, bottom); root.append(card);
+    });
+  }
+  function validHttpUrl(value) {
+    try { const u = new URL(String(value || ''), window.location.href); return ['http:', 'https:'].includes(u.protocol) ? u.href : ''; }
+    catch (_) { return ''; }
+  }
+  function exportCSV() {
+    const items = filteredArticles();
+    if (!items.length) {
+      addNotice('info', 'No hay datos para exportar', 'Ajusta los filtros o espera a que se recopilen noticias.');
+      return;
+    }
+    const columns = ['id','title','url','source','category','published_at','collected_at'];
+    const quote = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+    const csv = '\uFEFF' + [columns.join(','), ...items.map(a => columns.map(k => quote(a[k])).join(','))].join('\r\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'dashboard-noticias.csv';
+    document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+  document.querySelectorAll('.nav button').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    button.classList.add('active');
+    state.selectedCategory = button.dataset.category;
+    $('categoryFilter').value = '';
+    renderArticles();
+  }));
+  ['searchInput','categoryFilter','sourceFilter','dateFrom','dateTo'].forEach(id => $(id).addEventListener('input', renderArticles));
+  $('clearFilters').addEventListener('click', () => {
+    $('searchInput').value = ''; $('categoryFilter').value = ''; $('sourceFilter').value = '';
+    $('dateFrom').value = ''; $('dateTo').value = '';
+    state.selectedCategory = 'Todas';
+    document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.category === 'Todas'));
+    renderArticles();
+  });
+  $('refreshBtn').addEventListener('click', loadNews);
+  $('exportBtn').addEventListener('click', exportCSV);
+  $('themeBtn').addEventListener('click', () => {
+    const app = $('app');
+    const dark = app.dataset.theme !== 'dark';
+    app.dataset.theme = dark ? 'dark' : 'light';
+    $('themeBtn').querySelector('span').textContent = dark ? 'Modo claro' : 'Modo oscuro';
+  });
+  loadNews();
+})();
+</script>
+</body>
+</html>
